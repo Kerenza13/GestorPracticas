@@ -1,6 +1,14 @@
+<<<<<<< HEAD
 venv/
 __pycache__/
 *.db
 .env
 data/
+=======
+venv/
+__pycache__/
+*.db
+.env
+data/
+>>>>>>> backend
 .vscode/
