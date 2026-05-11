@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15
@@ -9,13 +7,20 @@ services:
       POSTGRES_USER: user_practicas
       POSTGRES_PASSWORD: password123
       POSTGRES_DB: gestion_practicas
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_practicas -d gestion_practicas"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   backend:
-    build: ./backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: fastapi_api
     ports:
       - "8000:8000"
@@ -25,7 +30,8 @@ services:
       # Conexión al contenedor 'db'
       DATABASE_URL: postgresql://user_practicas:password123@db:5432/gestion_practicas
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   postgres_data:
