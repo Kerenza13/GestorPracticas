@@ -8,8 +8,8 @@ export function DashboardView() {
   ]
 
   return (
-    <div className='min-h-screen bg-gray-950 py-10'>
-      <div className='mx-auto max-w-7xl space-y-10 px-6'>
+    <div className='bg-gray-950 py-10'>
+      <div className='mx-auto max-w-7xl space-y-10 px-4 sm:px-6 lg:px-8'>
         <section className='rounded-[32px] border border-slate-800 bg-slate-900/95 p-10 shadow-xl backdrop-blur-sm transition'>
           <p className='text-sm font-semibold uppercase tracking-[0.25em] text-slate-400'>Dashboard</p>
           <h1 className='mt-4 text-4xl font-semibold text-white'>Panel profesional de prácticas FCT</h1>

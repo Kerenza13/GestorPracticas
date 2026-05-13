@@ -1,7 +1,7 @@
 export function AlumnoView() {
   return (
-    <div className='min-h-screen bg-gray-950 py-10'>
-      <div className='mx-auto max-w-7xl space-y-10 px-6'>
+    <div className='bg-gray-950 py-10'>
+      <div className='mx-auto max-w-7xl space-y-10 px-4 sm:px-6 lg:px-8'>
         <header className='rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-xl'>
           <p className='text-sm font-semibold uppercase tracking-[0.25em] text-slate-400'>Alumno</p>
           <h1 className='mt-4 text-4xl font-semibold text-white'>Mi perfil y estado de prácticas</h1>
