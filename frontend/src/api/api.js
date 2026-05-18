@@ -1,4 +1,16 @@
-const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+const rawApiUrl = import.meta.env.VITE_API_URL
+const BASE_URL = rawApiUrl && rawApiUrl !== 'undefined' ? rawApiUrl.replace(/\/$/, '') : 'http://localhost:8000';
+
+const buildUrl = (path) => {
+  if (typeof path !== 'string') {
+    throw new Error('Invalid API path')
+  }
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path
+  }
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  return `${BASE_URL}${normalizedPath}`
+}
 
 const parseResponse = async (response) => {
   const contentType = response.headers.get('content-type')
@@ -18,7 +30,8 @@ const getAuthHeaders = () => {
 }
 
 const request = async (path, options = {}) => {
-  const response = await fetch(`${BASE_URL}${path}`, options)
+  const url = buildUrl(path)
+  const response = await fetch(url, options)
   return parseResponse(response)
 }
 
