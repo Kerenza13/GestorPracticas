@@ -2,17 +2,40 @@ import { Link, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
-const allNavItems = [
-  { label: 'Administración', to: '/admin' },
-  { label: 'Profesores', to: '/profesor' },
-  { label: 'Alumnos', to: '/alumno' },
+/**
+ * Items de navegación con roles permitidos
+ * Cada rol solo verá los items que le corresponden
+ */
+const navItemsConfig = [
+  { label: 'Administración', to: '/admin', allowedRoles: ['admin'] },
+  { label: 'Gestión de Clases', to: '/profesor', allowedRoles: ['teacher', 'admin'] },
+  { label: 'Mi Asignación', to: '/alumno', allowedRoles: ['student', 'admin'] },
 ]
+
+/**
+ * Filtra los items de navegación según el rol del usuario
+ * @param {string|null} role - Rol del usuario actual
+ * @returns {Array} - Items filtrados para mostrar
+ */
+function getFilteredNavItems(role) {
+  if (!role) return []
+  return navItemsConfig.filter((item) => item.allowedRoles.includes(role))
+}
 
 export function Navbar() {
   const location = useLocation()
   const [isOpen, setIsOpen] = useState(false)
   const { user, logout } = useAuth()
-  const navItems = allNavItems
+  const navItems = getFilteredNavItems(user?.role)
+
+  const getRoleLabel = (role) => {
+    const roleLabels = {
+      admin: 'Administrador',
+      teacher: 'Profesor',
+      student: 'Alumno',
+    }
+    return roleLabels[role] || role.toUpperCase()
+  }
 
   return (
     <nav className='sticky top-0 z-20 border-b border-slate-800 bg-slate-950/95 backdrop-blur-lg shadow-sm'>
@@ -32,7 +55,7 @@ export function Navbar() {
                 key={item.to}
                 to={item.to}
                 className={`rounded-full px-3 py-2 text-xs font-medium transition sm:px-4 sm:py-2 sm:text-sm ${
-                  active ? 'bg-slate-100 text-slate-950' : 'text-slate-200 hover:bg-slate-800'
+                  active ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-200 hover:bg-slate-800'
                 }`}
               >
                 {item.label}
@@ -43,11 +66,14 @@ export function Navbar() {
           {user ? (
             <>
               <span className='rounded-full bg-slate-800 px-3 py-2 text-xs font-medium text-slate-300 sm:px-4 sm:py-2 sm:text-sm'>
-                {user.role.toUpperCase()}
+                {getRoleLabel(user.role)}
               </span>
               <button
-                onClick={logout}
-                className='rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-slate-200 sm:px-4 sm:py-2 sm:text-sm'
+                onClick={() => {
+                  logout()
+                  setIsOpen(false)
+                }}
+                className='rounded-full bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 sm:px-4 sm:py-2 sm:text-sm'
               >
                 Cerrar sesión
               </button>
@@ -55,9 +81,9 @@ export function Navbar() {
           ) : (
             <Link
               to='/auth/login'
-              className='rounded-full bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-950 transition hover:bg-slate-200 sm:px-4 sm:py-2 sm:text-sm'
+              className='rounded-full bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 sm:px-4 sm:py-2 sm:text-sm'
             >
-              Auth
+              Iniciar Sesión
             </Link>
           )}
         </div>
@@ -89,20 +115,27 @@ export function Navbar() {
                   to={item.to}
                   onClick={() => setIsOpen(false)}
                   className={`block rounded-lg px-4 py-2 text-sm font-medium transition ${
-                    active ? 'bg-slate-100 text-slate-950' : 'text-slate-200 hover:bg-slate-800'
+                    active ? 'bg-blue-600 text-white' : 'text-slate-200 hover:bg-slate-800'
                   }`}
                 >
                   {item.label}
                 </Link>
               )
             })}
+            {user && (
+              <div className='border-t border-slate-700 pt-2'>
+                <p className='px-4 py-2 text-xs font-medium text-slate-400'>
+                  Usuario: {getRoleLabel(user.role)}
+                </p>
+              </div>
+            )}
             {user ? (
               <button
                 onClick={() => {
                   logout()
                   setIsOpen(false)
                 }}
-                className='block w-full rounded-lg bg-slate-100 px-4 py-2 text-left text-sm font-semibold text-slate-950 transition hover:bg-slate-200'
+                className='block w-full rounded-lg bg-red-600 px-4 py-2 text-left text-sm font-semibold text-white transition hover:bg-red-700'
               >
                 Cerrar sesión
               </button>
@@ -110,9 +143,9 @@ export function Navbar() {
               <Link
                 to='/auth/login'
                 onClick={() => setIsOpen(false)}
-                className='block rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-200'
+                className='block rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700'
               >
-                Auth
+                Iniciar Sesión
               </Link>
             )}
           </div>
