@@ -12,7 +12,6 @@ from app.auth import get_current_user
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-# Asegura que las tablas existan
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Gestión de Prácticas API")

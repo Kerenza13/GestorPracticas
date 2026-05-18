@@ -6,7 +6,6 @@ from app import models  # Asegúrate de que la ruta a models sea correcta
 from app.database import get_db
 from passlib.context import CryptContext
 from datetime import datetime, timedelta  # <--- ESTO ES LO QUE FALTA
-
 # Configuración secreta (¡No la compartas!)
 SECRET_KEY = "mi_clave_super_secreta_123"
 ALGORITHM = "HS256"
