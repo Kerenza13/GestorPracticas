@@ -8,7 +8,7 @@ import os
 
 from app import models, database, auth, schemas
 from app.database import engine, get_db 
-from app.auth import get_current_user
+from app.auth import get_current_user, hash_password
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,15 +26,17 @@ app.add_middleware(
 
 # --- 1. REGISTRO ---
 @app.post("/register", tags=["Auth"])
-def register(nombre: str, email: str, password: str, role: str = "student", db: Session = Depends(get_db)):
-    user_exists = db.query(models.User).filter(models.User.email == email).first()
-    if user_exists:
+def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
+    if db.query(models.User).filter(models.User.email == user_in.email).first():
         raise HTTPException(status_code=400, detail="El email ya existe")
-    new_user = models.User(full_name=nombre, email=email, hashed_password=auth.hash_password(password), role=role)
+    
+    new_user = models.User(
+        full_name=user_in.nombre, email=user_in.email, 
+        hashed_password=hash_password(user_in.password), role=user_in.role
+    )
     db.add(new_user)
     db.commit()
-    return {"mensaje": f"Usuario registrado como {role}"}
-
+    return {"mensaje": f"Usuario registrado como {user_in.role}"}
 # --- 2. LOGIN ---
 @app.post("/login", tags=["Auth"])
 def login(login_data: schemas.LoginRequest, db: Session = Depends(get_db)):
@@ -60,10 +62,10 @@ async def importar_alumnos(file: UploadFile = File(...), db: Session = Depends(g
     reader = csv.reader(io.StringIO(content.decode('utf-8-sig')))
     contador = 0
     for row in reader:
-        if not row or len(row) < 3: continue
-        nombre, email, password = row
+        if not row or len(row) < 4: continue
+        nombre, email, password, telefono = row
         if not db.query(models.User).filter(models.User.email == email.strip()).first():
-            db.add(models.User(full_name=nombre.strip(), email=email.strip(), hashed_password=auth.hash_password(password.strip()), role="student"))
+            db.add(models.User(full_name=nombre.strip(), email=email.strip(), hashed_password=auth.hash_password(password.strip()), telefono=telefono.strip(), role="student"))
             contador += 1
     db.commit()
     return {"mensaje": f"Importados {contador} alumnos"}

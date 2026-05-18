@@ -1,0 +1,11 @@
+[33m56a8894[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mbackend[m[33m, [m[1;31mdestino/main[m[33m, [m[1;31mdestino/frontend[m[33m, [m[1;31mdestino/backend[m[33m)[m HEAD@{0}: pull destino frontend: Fast-forward
+[33m944580a[m HEAD@{1}: checkout: moving from frontend to backend
+[33mf5031b8[m[33m ([m[1;32mfrontend[m[33m)[m HEAD@{2}: commit: Cambios en backend
+[33me8e5228[m HEAD@{3}: checkout: moving from main to frontend
+[33m3570ed7[m[33m ([m[1;32mmain[m[33m)[m HEAD@{4}: commit (merge): merge con rama backend
+[33mf64ade9[m HEAD@{5}: checkout: moving from main to main
+[33mf64ade9[m HEAD@{6}: checkout: moving from backend to main
+[33m944580a[m HEAD@{7}: commit: Simplificacion de codigo
+[33m4cc112d[m[33m ([m[1;32mbackend-en_Desarrollo[m[33m)[m HEAD@{8}: checkout: moving from backend-en_Desarrollo to backend
+[33m4cc112d[m[33m ([m[1;32mbackend-en_Desarrollo[m[33m)[m HEAD@{9}: commit: Base de datos con conexion local y externa
+[33me528c1e[m HEAD@{10}: commit (initial): Backend funcional, falta modo local, limpiar y hacer funciones

@@ -7,6 +7,12 @@ class LoginRequest(BaseModel):
     username: str # Email
     password: str
 
+class UserCreate(BaseModel):
+    nombre: str
+    email: EmailStr
+    password: str
+    role: str = "student"
+
 class UserOut(BaseModel):
     id: int
     full_name: str
