@@ -99,7 +99,8 @@ export const obtenerCiclos = async () => {
 }
 
 export const obtenerAlumnos = async (profesor_id) => {
-  return request(`/mis-alumnos/?profesor_id=${profesor_id}`, {
+  const path = profesor_id ? `/mis-alumnos/?profesor_id=${profesor_id}` : '/mis-alumnos/'
+  return request(path, {
     method: 'GET',
     headers: getAuthHeaders(),
   })

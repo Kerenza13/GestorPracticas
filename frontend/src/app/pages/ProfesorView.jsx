@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 import { importAlumnos, importEmpresas, registerEmpresa, asignarAlumno, descargarCV, verEstadoPlazas, obtenerCiclos, obtenerAlumnos } from '../../api/api'
 
 export function ProfesorView() {
@@ -46,6 +47,33 @@ export function ProfesorView() {
     loadPlazas()
     loadCiclos()
   }, [])
+
+  // Auto-load alumnos when the authenticated user is a profesor
+  const { user } = useAuth()
+
+  useEffect(() => {
+    if (!user || user.role !== 'profesor') return
+
+    const autoLoadAlumnos = async () => {
+      try {
+        // Try to fetch using the token-based endpoint; backend should return the professor's alumnos
+        const data = await obtenerAlumnos()
+        setAlumnos(data)
+        setSelectedAlumnoId(data[0]?.id?.toString() || '')
+        // intentar preseleccionar el ciclo a partir del primer alumno si existe
+        const alumnoCicloId = data[0]?.ciclo?.id || data[0]?.ciclo_id || data[0]?.ciclo
+        if (alumnoCicloId) {
+          setSelectedCicloId(alumnoCicloId?.toString ? alumnoCicloId.toString() : alumnoCicloId)
+        }
+        setTeacherIdForAlumnos(user.sub?.toString() || '')
+        setMessage('Alumnos cargados automáticamente')
+      } catch (err) {
+        console.warn('No se pudieron cargar los alumnos automáticamente:', err.message)
+      }
+    }
+
+    autoLoadAlumnos()
+  }, [user])
 
   const handleLoadAlumnos = async (event) => {
     event.preventDefault()
