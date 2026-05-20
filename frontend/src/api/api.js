@@ -79,6 +79,32 @@ export const importEmpresas = async (file) => {
   })
 }
 
+export const registerEmpresa = async ({ nombre, direccion, web, contacto, email, telefono, dni, plazas }) => {
+  const csvContent = `${nombre},${direccion},${web},${contacto},${email},${telefono},${dni},${plazas}\n`
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const formData = new FormData()
+  formData.append('file', blob, 'empresa.csv')
+  return request('/empresas/importar', {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: formData,
+  })
+}
+
+export const obtenerCiclos = async () => {
+  return request('/ciclos/', {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+}
+
+export const obtenerAlumnos = async (profesor_id) => {
+  return request(`/mis-alumnos/?profesor_id=${profesor_id}`, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  })
+}
+
 export const asignarAlumno = async ({ alumno_id, empresa_id, ciclo_id }) => {
   return request('/asignar/', {
     method: 'POST',
