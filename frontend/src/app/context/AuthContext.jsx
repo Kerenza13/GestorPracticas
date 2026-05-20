@@ -84,10 +84,15 @@ export function AuthProvider({ children }) {
       localStorage.setItem('fp_token', token)
       localStorage.setItem('fp_role', data.role)
       localStorage.setItem('fp_email', email)
-      localStorage.setItem('fp_nombre', data.nombre || '')
+
+      // El backend de login no devuelve nombre, solo rol y token.
+      const storedNombre = localStorage.getItem('fp_nombre') || ''
+      if (storedNombre) {
+        localStorage.setItem('fp_nombre', storedNombre)
+      }
 
       // Actualizar estado
-      setUser({ email, role: data.role, nombre: data.nombre || '', sub: payload.sub })
+      setUser({ email, role: data.role, nombre: storedNombre, sub: payload.sub })
       return data
     } finally {
       setLoading(false)
