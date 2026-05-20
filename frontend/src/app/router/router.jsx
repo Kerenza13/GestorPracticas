@@ -5,7 +5,7 @@ import { AdminView } from '../pages/AdminView'
 import { ProfesorView } from '../pages/ProfesorView'
 import { AlumnoView } from '../pages/AlumnoView'
 import { Auth } from '../pages/Auth'
-// import { ProtectedRoute } from '../components/ProtectedRoute'
+import { ProtectedRoute } from '../components/ProtectedRoute'
 
 const router = createBrowserRouter([
   {
@@ -22,25 +22,25 @@ const router = createBrowserRouter([
       {
         path: '/admin',
         element: (
-          // <ProtectedRoute allowedRoles='admin'>
+          <ProtectedRoute allowedRoles='admin'>
             <AdminView />
-          // </ProtectedRoute>
+          </ProtectedRoute>
         ),
       },
       {
         path: '/profesor',
         element: (
-          // <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+          <ProtectedRoute allowedRoles={['teacher', 'admin']}>
             <ProfesorView />
-          // </ProtectedRoute>
+          </ProtectedRoute>
         ),
       },
       {
         path: '/alumno',
         element: (
-          // <ProtectedRoute allowedRoles={['student', 'admin']}>
+          <ProtectedRoute allowedRoles={['student', 'admin']}>
             <AlumnoView />
-          // </ProtectedRoute>
+          </ProtectedRoute>
         ),
       },
       {
