@@ -19,7 +19,6 @@ export function ProfesorView() {
   const [selectedAlumnoId, setSelectedAlumnoId] = useState('')
   const [selectedEmpresaId, setSelectedEmpresaId] = useState('')
   const [selectedCicloId, setSelectedCicloId] = useState('')
-  const [teacherIdForAlumnos, setTeacherIdForAlumnos] = useState('')
   const [plazasStatus, setPlazasStatus] = useState([])
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -65,7 +64,6 @@ export function ProfesorView() {
         if (alumnoCicloId) {
           setSelectedCicloId(alumnoCicloId?.toString ? alumnoCicloId.toString() : alumnoCicloId)
         }
-        setTeacherIdForAlumnos(user.sub?.toString() || '')
         setMessage('Alumnos cargados automáticamente')
       } catch (err) {
         console.warn('No se pudieron cargar los alumnos automáticamente:', err.message)
@@ -75,25 +73,7 @@ export function ProfesorView() {
     autoLoadAlumnos()
   }, [user])
 
-  const handleLoadAlumnos = async (event) => {
-    event.preventDefault()
-    setMessage('')
-    setError('')
 
-    if (!teacherIdForAlumnos) {
-      setError('Introduce el ID del profesor para cargar sus alumnos')
-      return
-    }
-
-    try {
-      const data = await obtenerAlumnos(Number(teacherIdForAlumnos))
-      setAlumnos(data)
-      setSelectedAlumnoId(data[0]?.id?.toString() || '')
-      setMessage('Alumnos cargados correctamente')
-    } catch (err) {
-      setError(err.message || 'No se pudieron cargar los alumnos')
-    }
-  }
 
   const handleImportAlumnos = async (event) => {
     event.preventDefault()
@@ -362,27 +342,15 @@ export function ProfesorView() {
             <p className='mt-3 text-slate-400'>Selecciona alumno, empresa y ciclo desde los desplegables para registrar la asignación.</p>
             <form onSubmit={handleAssignAlumno} className='mt-6 space-y-4'>
               <div className='space-y-4'>
-                <div className='grid gap-4 sm:grid-cols-2'>
-                  <label className='block'>
-                    <span className='text-sm font-medium text-slate-200'>ID profesor</span>
-                    <div className='mt-2 flex gap-2'>
-                      <input
-                        value={teacherIdForAlumnos}
-                        onChange={(event) => setTeacherIdForAlumnos(event.target.value)}
-                        className='w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600'
-                        placeholder='ID del profesor'
-                        type='number'
-                      />
-                      <button
-                        type='button'
-                        onClick={handleLoadAlumnos}
-                        className='rounded-3xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200'
-                      >
-                        Cargar alumnos
-                      </button>
-                    </div>
-                  </label>
-                </div>
+                <label className='block'>
+                  <span className='text-sm font-medium text-slate-200'>ID del profesor (autollenado)</span>
+                  <input
+                    type='text'
+                    value={user?.sub || '—'}
+                    disabled
+                    className='mt-2 w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-400 outline-none cursor-not-allowed'
+                  />
+                </label>
 
                 <label className='block'>
                   <span className='text-sm font-medium text-slate-200'>Alumno</span>
