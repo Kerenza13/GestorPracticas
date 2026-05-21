@@ -4,20 +4,22 @@ import {
   importEmpresas,
   registerEmpresa,
   asignarAlumno,
+  registrarSeguimiento,
   descargarCV,
   verEstadoPlazas,
   obtenerCiclos,
   obtenerAlumnos,
-  registrarSeguimiento, // 🟢 Recuperado de tus cambios
-  obtenerHistorialEmpresa, // 🟢 Recuperado de tus cambios
+  obtenerHistorialEmpresa,
 } from "../../api/api";
-import { useAuth } from "../context/AuthContext";
 
 export function ProfesorView() {
+  // Estados de archivos y mensajes
   const [alumnosFile, setAlumnosFile] = useState(null);
   const [empresasFile, setEmpresasFile] = useState(null);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
-  // Estados para Registro de Empresa (Cambios del main)
+  // Estados del Formulario de Registro de Empresa Manual
   const [companyNombre, setCompanyNombre] = useState("");
   const [companyDireccion, setCompanyDireccion] = useState("");
   const [companyWeb, setCompanyWeb] = useState("");
@@ -27,26 +29,26 @@ export function ProfesorView() {
   const [companyDni, setCompanyDni] = useState("");
   const [companyPlazas, setCompanyPlazas] = useState("1");
 
-  // Estados para selectores y cargas (Cambios del main)
+  // Estados de datos de la API
   const [alumnos, setAlumnos] = useState([]);
   const [empresas, setEmpresas] = useState([]);
   const [ciclos, setCiclos] = useState([]);
+  const [plazasStatus, setPlazasStatus] = useState([]);
+  const [historial, setHistorial] = useState([]);
+
+  // Estados de Selección / IDs
   const [selectedAlumnoId, setSelectedAlumnoId] = useState("");
   const [selectedEmpresaId, setSelectedEmpresaId] = useState("");
   const [selectedCicloId, setSelectedCicloId] = useState("");
   const [teacherIdForAlumnos, setTeacherIdForAlumnos] = useState("");
-
-  // Estados de tus funcionalidades (Recuperados de HEAD)
-  const [profesorId, setProfesorId] = useState("");
+  
+  // Seguimiento e Historial
   const [seguimientoEmpresaId, setSeguimientoEmpresaId] = useState("");
   const [observaciones, setObservaciones] = useState("");
+  const [profesorId, setProfesorId] = useState("");
   const [historialEmpresaId, setHistorialEmpresaId] = useState("");
-  const [historial, setHistorial] = useState([]);
 
-  const [plazasStatus, setPlazasStatus] = useState([]);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-
+  // Carga inicial de datos de la API al montar el componente
   useEffect(() => {
     const loadPlazas = async () => {
       try {
@@ -63,10 +65,7 @@ export function ProfesorView() {
         const data = await obtenerCiclos();
         setCiclos(data);
       } catch (err) {
-        console.warn(
-          "No se pudieron cargar los ciclos automáticamente:",
-          err.message,
-        );
+        console.warn("No se pudieron cargar los ciclos automáticamente:", err.message);
       }
     };
 
@@ -74,39 +73,7 @@ export function ProfesorView() {
     loadCiclos();
   }, []);
 
-  // Auto-load alumnos when the authenticated user is a profesor
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (!user || user.role !== "profesor") return;
-
-    const autoLoadAlumnos = async () => {
-      try {
-        // Try to fetch using the token-based endpoint; backend should return the professor's alumnos
-        const data = await obtenerAlumnos();
-        setAlumnos(data);
-        setSelectedAlumnoId(data[0]?.id?.toString() || "");
-        // intentar preseleccionar el ciclo a partir del primer alumno si existe
-        const alumnoCicloId =
-          data[0]?.ciclo?.id || data[0]?.ciclo_id || data[0]?.ciclo;
-        if (alumnoCicloId) {
-          setSelectedCicloId(
-            alumnoCicloId?.toString ? alumnoCicloId.toString() : alumnoCicloId,
-          );
-        }
-        setTeacherIdForAlumnos(user.sub?.toString() || "");
-        setMessage("Alumnos cargados automáticamente");
-      } catch (err) {
-        console.warn(
-          "No se pudieron cargar los alumnos automáticamente:",
-          err.message,
-        );
-      }
-    };
-
-    autoLoadAlumnos();
-  }, [user]);
-
+  // Manejadores de eventos (Handlers)
   const handleLoadAlumnos = async (event) => {
     event.preventDefault();
     setMessage("");
@@ -231,24 +198,6 @@ export function ProfesorView() {
     }
   };
 
-  const handleDownloadCV = async () => {
-    setMessage("");
-    setError("");
-
-    if (!selectedAlumnoId) {
-      setError("Selecciona un alumno para descargar su CV");
-      return;
-    }
-
-    try {
-      await descargarCV(Number(selectedAlumnoId));
-      setMessage("Descarga iniciada para el CV del alumno seleccionado");
-    } catch (err) {
-      setError(err.message || "Error al descargar el CV");
-    }
-  };
-
-  // 🟢 Tus funciones de seguimiento recuperadas y adaptadas
   const handleSeguimiento = async (event) => {
     event.preventDefault();
     setMessage("");
@@ -282,9 +231,28 @@ export function ProfesorView() {
     }
   };
 
+  const handleDownloadCV = async () => {
+    setMessage("");
+    setError("");
+
+    if (!selectedAlumnoId) {
+      setError("Selecciona un alumno para descargar su CV");
+      return;
+    }
+
+    try {
+      await descargarCV(Number(selectedAlumnoId));
+      setMessage("Descarga iniciada para el CV del alumno seleccionado");
+    } catch (err) {
+      setError(err.message || "Error al descargar el CV");
+    }
+  };
+
   return (
-    <div className="bg-gray-950 py-10">
+    <div className="bg-gray-950 py-10 min-h-screen">
       <div className="mx-auto max-w-7xl space-y-10 px-4 sm:px-6 lg:px-8">
+        
+        {/* CABECERA */}
         <header className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-xl">
           <p className="text-sm font-semibold uppercase tracking-[0.25em] text-slate-400">
             Profesor / Gestor de grupo
@@ -293,400 +261,177 @@ export function ProfesorView() {
             Gestión de alumnos, empresas y plazas
           </h1>
           <p className="mt-4 text-slate-300">
-            Importa listados masivos, registra el seguimiento de contactos y
-            organiza plazas de empresa para tu grupo.
+            Importa listados masivos, registra el seguimiento de contactos y organiza plazas de empresa para tu grupo.
           </p>
         </header>
 
+        {/* FEEDBACK GLOBAL */}
         {(message || error) && (
-          <div className="grid gap-4">
-            {message && (
-              <div className="rounded-3xl bg-emerald-500/10 px-5 py-4 text-emerald-200">
-                {message}
-              </div>
-            )}
-            {error && (
-              <div className="rounded-3xl bg-red-500/10 px-5 py-4 text-red-200">
-                {error}
-              </div>
-            )}
+          <div className={`p-4 rounded-2xl border ${message ? 'bg-green-950/40 border-green-800 text-green-400' : 'bg-red-950/40 border-red-800 text-red-400'}`}>
+            <p className="text-sm font-medium">{message || error}</p>
           </div>
         )}
 
-        <section className="grid gap-6 xl:grid-cols-[1.5fr_1fr]">
-          <div className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg">
-            <h2 className="text-2xl font-semibold text-white">
-              Importación masiva
-            </h2>
-            <p className="mt-3 text-slate-400">
-              Sube tus listados de alumnos o empresas en CSV para matricular y
-              registrar datos de forma rápida.
-            </p>
-            <form onSubmit={handleImportAlumnos} className="mt-6 space-y-4">
-              <label className="block rounded-3xl border border-slate-700 bg-slate-950 p-4">
-                <span className="text-sm font-medium text-slate-200">
-                  CSV alumnos
-                </span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="mt-3 w-full text-sm text-slate-200"
-                  onChange={(event) =>
-                    setAlumnosFile(event.target.files?.[0] || null)
-                  }
-                />
+        {/* BLOQUE 1: IMPORTACIÓN Y SEGUIMIENTO */}
+        <section className="grid gap-6 xl:grid-cols-[1.2fr_1.8fr]">
+          
+          {/* IMPORTACIÓN MASIVA */}
+          <div className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Importación masiva</h2>
+              <p className="mt-1 text-sm text-slate-400">Sube tus listados en formato CSV.</p>
+            </div>
+
+            <form onSubmit={handleImportAlumnos} className="space-y-3">
+              <label className="block rounded-2xl border border-slate-800 bg-slate-950 p-4 cursor-pointer hover:border-slate-700 transition">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">CSV Alumnos</span>
+                <input type="file" accept=".csv" className="w-full text-sm text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:bg-slate-800 file:text-slate-200" onChange={(e) => setAlumnosFile(e.target.files[0])} />
               </label>
-              <button
-                type="submit"
-                className="w-full rounded-3xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-              >
-                Importar alumnos
-              </button>
+              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2 px-4 rounded-xl transition">Importar Alumnos</button>
             </form>
-            <form onSubmit={handleImportEmpresas} className="mt-6 space-y-4">
-              <label className="block rounded-3xl border border-slate-700 bg-slate-950 p-4">
-                <span className="text-sm font-medium text-slate-200">
-                  CSV empresas
-                </span>
-                <input
-                  type="file"
-                  accept=".csv"
-                  className="mt-3 w-full text-sm text-slate-200"
-                  onChange={(event) =>
-                    setEmpresasFile(event.target.files?.[0] || null)
-                  }
-                />
+
+            <hr className="border-slate-800" />
+
+            <form onSubmit={handleImportEmpresas} className="space-y-3">
+              <label className="block rounded-2xl border border-slate-800 bg-slate-950 p-4 cursor-pointer hover:border-slate-700 transition">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">CSV Empresas</span>
+                <input type="file" accept=".csv" className="w-full text-sm text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:bg-slate-800 file:text-slate-200" onChange={(e) => setEmpresasFile(e.target.files[0])} />
               </label>
-              <button
-                type="submit"
-                className="w-full rounded-3xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-              >
-                Importar empresas
-              </button>
+              <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm py-2 px-4 rounded-xl transition">Importar Empresas</button>
             </form>
           </div>
 
-          <div className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg">
-            <h2 className="text-2xl font-semibold text-white">
-              Registrar empresa manualmente
-            </h2>
-            <p className="mt-3 text-slate-400">
-              Introduce los datos de una empresa para crearla sin necesidad de
-              CSV.
-            </p>
-            <form onSubmit={handleRegisterEmpresa} className="mt-6 space-y-4">
-              <input
-                value={companyNombre}
-                onChange={(event) => setCompanyNombre(event.target.value)}
-                className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                placeholder="Nombre de la empresa"
-                required
-              />
-              <input
-                value={companyDireccion}
-                onChange={(event) => setCompanyDireccion(event.target.value)}
-                className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                placeholder="Dirección"
-                required
-              />
-              <input
-                value={companyWeb}
-                onChange={(event) => setCompanyWeb(event.target.value)}
-                className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                placeholder="Web"
-              />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <input
-                  value={companyContacto}
-                  onChange={(event) => setCompanyContacto(event.target.value)}
-                  className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                  placeholder="Contacto"
-                  required
-                />
-                <input
-                  value={companyEmail}
-                  onChange={(event) => setCompanyEmail(event.target.value)}
-                  type="email"
-                  className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                  placeholder="Email de tutor"
-                  required
-                />
+          {/* SEGUIMIENTO DE EMPRESAS */}
+          <div className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg grid gap-6 md:grid-cols-2">
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-white">Nuevo Seguimiento</h2>
+                <p className="mt-1 text-sm text-slate-400">Registra reuniones o llamadas.</p>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <input
-                  value={companyTelefono}
-                  onChange={(event) => setCompanyTelefono(event.target.value)}
-                  className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                  placeholder="Teléfono"
-                  required
-                />
-                <input
-                  value={companyDni}
-                  onChange={(event) => setCompanyDni(event.target.value)}
-                  className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                  placeholder="DNI responsable"
-                  required
-                />
+              <form onSubmit={handleSeguimiento} className="space-y-3">
+                <select className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-slate-700" value={seguimientoEmpresaId} onChange={(e) => setSeguimientoEmpresaId(e.target.value)} required>
+                  <option value="">Selecciona Empresa...</option>
+                  {empresas.map((emp) => (<option key={emp.id} value={emp.id}>{emp.nombre}</option>))}
+                </select>
+                <input type="number" placeholder="ID de Profesor" className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-sm" value={profesorId} onChange={(e) => setProfesorId(e.target.value)} required />
+                <textarea placeholder="Observaciones de la gestión..." rows="3" className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-sm" value={observaciones} onChange={(e) => setObservaciones(e.target.value)} required></textarea>
+                <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm py-2 px-4 rounded-xl transition">Añadir Registro</button>
+              </form>
+            </div>
+
+            <div className="space-y-4 border-t md:border-t-0 md:border-l border-slate-800 md:pl-6 pt-6 md:pt-0">
+              <div>
+                <h2 className="text-2xl font-semibold text-white">Historial</h2>
+                <p className="mt-1 text-sm text-slate-400">Consulta gestiones pasadas.</p>
               </div>
-              <input
-                value={companyPlazas}
-                onChange={(event) => setCompanyPlazas(event.target.value)}
-                type="number"
-                min="1"
-                className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                placeholder="Plazas disponibles"
-                required
-              />
-              <button
-                type="submit"
-                className="w-full rounded-3xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-              >
-                Registrar empresa
-              </button>
-            </form>
-          </div>
-        </section>
-
-        {/* 🟢 SECCIÓN DE SEGUIMIENTO E HISTORIAL REINTEGRADA */}
-        <section className="grid gap-6 xl:grid-cols-2">
-          <div className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg">
-            <h2 className="text-2xl font-semibold text-white">
-              Registrar seguimiento
-            </h2>
-            <form onSubmit={handleSeguimiento} className="mt-6 space-y-4">
-              <input
-                value={seguimientoEmpresaId}
-                onChange={(e) => setSeguimientoEmpresaId(e.target.value)}
-                type="number"
-                className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                placeholder="ID de la empresa"
-                required
-              />
-              <input
-                value={profesorId}
-                onChange={(e) => setProfesorId(e.target.value)}
-                type="number"
-                className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                placeholder="ID del profesor"
-                required
-              />
-              <textarea
-                value={observaciones}
-                onChange={(e) => setObservaciones(e.target.value)}
-                className="w-full h-24 rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600 resize-none"
-                placeholder="Observaciones de la reunión o llamada..."
-                required
-              />
-              <button
-                type="submit"
-                className="w-full rounded-3xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-              >
-                Guardar contacto
-              </button>
-            </form>
-          </div>
-
-          <div className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg">
-            <h2 className="text-2xl font-semibold text-white">
-              Historial de la empresa
-            </h2>
-            <form onSubmit={loadHistorial} className="mt-6 flex gap-2">
-              <input
-                value={historialEmpresaId}
-                onChange={(e) => setHistorialEmpresaId(e.target.value)}
-                type="number"
-                className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                placeholder="ID de la empresa para buscar"
-                required
-              />
-              <button
-                type="submit"
-                className="rounded-3xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-              >
-                Buscar
-              </button>
-            </form>
-            <div className="mt-4 space-y-3 max-h-48 overflow-y-auto pr-2">
-              {historial.length === 0 ? (
-                <p className="text-sm text-slate-500 italic text-center py-4">
-                  No se han cargado registros históricos.
-                </p>
-              ) : (
-                historial.map((item, index) => (
-                  <div
-                    key={index}
-                    className="rounded-2xl border border-slate-800 bg-slate-950 p-3 text-sm text-slate-300"
-                  >
-                    <p className="font-semibold text-slate-100">
-                      Profesor ID: {item.profesor_id}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      {item.fecha || "Fecha no registrada"}
-                    </p>
-                    <p className="mt-2 bg-slate-900/50 p-2 rounded-xl text-slate-200">
-                      {item.observaciones}
-                    </p>
-                  </div>
-                ))
-              )}
+              <form onSubmit={loadHistorial} className="flex gap-2">
+                <select className="flex-1 bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-sm" value={historialEmpresaId} onChange={(e) => setHistorialEmpresaId(e.target.value)} required>
+                  <option value="">Selecciona Empresa...</option>
+                  {empresas.map((emp) => (<option key={emp.id} value={emp.id}>{emp.nombre}</option>))}
+                </select>
+                <button type="submit" className="bg-slate-800 hover:bg-slate-700 text-white px-4 rounded-xl text-sm transition">Ver</button>
+              </form>
+              <div className="bg-slate-950 rounded-2xl border border-slate-800 p-3 max-h-[170px] overflow-y-auto space-y-2">
+                {historial.length === 0 ? (
+                  <p className="text-xs text-slate-500 text-center py-4">No hay registros cargados aún.</p>
+                ) : (
+                  historial.map((hist) => (
+                    <div key={hist.id} className="p-2 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300">
+                      <p className="font-semibold text-slate-400">{hist.fecha_contacto || "Reciente"}</p>
+                      <p className="mt-1 text-slate-200">{hist.observaciones}</p>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </section>
 
+        {/* BLOQUE 2: PLAZAS Y ASIGNACIÓN */}
         <section className="grid gap-6 xl:grid-cols-2">
-          <div className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg">
-            <h2 className="text-2xl font-semibold text-white">
-              Estado de plazas
-            </h2>
-            <p className="mt-3 text-slate-400">
-              Estado actual de plazas por empresa.
-            </p>
-            <div className="mt-6 space-y-4">
-              {plazasStatus.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-slate-700 bg-slate-950 p-8 text-center text-slate-400">
-                  No hay información de plazas disponible.
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {plazasStatus.map((empresa) => (
-                    <div
-                      key={empresa.id}
-                      className="rounded-3xl border border-slate-700 bg-slate-950 p-4"
-                    >
-                      <p className="font-semibold text-white">
-                        {empresa.nombre}
-                      </p>
-                      <p className="text-sm text-slate-400">
-                        Total: {empresa.totales} • Libres: {empresa.libres}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
+          
+          {/* ESTADO DE PLAZAS */}
+          <div className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg space-y-4">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Estado de plazas ocupadas</h2>
+              <p className="mt-1 text-sm text-slate-400">Control en tiempo real de vacantes disponibles.</p>
+            </div>
+            <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden max-h-[340px] overflow-y-auto">
+              <table className="w-full text-left border-collapse text-sm text-slate-300">
+                <thead className="bg-slate-900 text-xs font-semibold text-slate-400 uppercase border-b border-slate-800">
+                  <tr>
+                    <th className="p-3">Empresa</th>
+                    <th className="p-3 text-center">Totales</th>
+                    <th className="p-3 text-center">Libres</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-900">
+                  {plazasStatus.length === 0 ? (
+                    <tr><td colSpan="3" className="p-4 text-center text-xs text-slate-500">No hay datos de empresas.</td></tr>
+                  ) : (
+                    plazasStatus.map((item) => (
+                      <tr key={item.id} className="hover:bg-slate-900/40">
+                        <td className="p-3 font-medium text-white">{item.nombre}</td>
+                        <td className="p-3 text-center">{item.totales}</td>
+                        <td className="p-3 text-center"><span className={`px-2 py-0.5 rounded-full text-xs font-bold ${item.libres > 0 ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>{item.libres}</span></td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg">
-            <h2 className="text-2xl font-semibold text-white">
-              Asignar alumno a empresa
-            </h2>
-            <p className="mt-3 text-slate-400">
-              Selecciona alumno, empresa y ciclo desde los desplegables para
-              registrar la asignación.
-            </p>
-            <form onSubmit={handleAssignAlumno} className="mt-6 space-y-4">
-              <div className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="text-sm font-medium text-slate-200">
-                      ID profesor
-                    </span>
-                    <div className="mt-2 flex gap-2">
-                      <input
-                        value={teacherIdForAlumnos}
-                        onChange={(event) =>
-                          setTeacherIdForAlumnos(event.target.value)
-                        }
-                        className="w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                        placeholder="ID del profesor"
-                        type="number"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleLoadAlumnos}
-                        className="rounded-3xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-                      >
-                        Cargar alumnos
-                      </button>
-                    </div>
-                  </label>
+          {/* ASIGNACIÓN MANUAL / SELECTOR COMPLETO Y DESCARGA CV */}
+          <div className="rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold text-white">Asignación Directa y CVs</h2>
+              <p className="mt-1 text-sm text-slate-400">Vincula alumnos a plazas e inspecciona currículums.</p>
+            </div>
+
+            {/* Paso previo obligatorio: cargar alumnos de la BD */}
+            <form onSubmit={handleLoadAlumnos} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 flex gap-3 items-end">
+              <div className="flex-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-1">ID Tutor / Profe</label>
+                <input type="number" placeholder="Ej: 1" className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-3 py-1.5 text-sm" value={teacherIdForAlumnos} onChange={(e) => setTeacherIdForAlumnos(e.target.value)} required />
+              </div>
+              <button type="submit" className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-1.5 rounded-xl text-sm transition font-medium">Cargar Alumnos</button>
+            </form>
+
+            <form onSubmit={handleAssignAlumno} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold uppercase text-slate-400 block mb-1">1. Alumno de tu grupo</label>
+                  <select className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-sm" value={selectedAlumnoId} onChange={(e) => setSelectedAlumnoId(e.target.value)}>
+                    <option value="">Selecciona Alumno...</option>
+                    {alumnos.map((a) => (<option key={a.id} value={a.id}>{a.full_name || a.email}</option>))}
+                  </select>
                 </div>
-
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-200">
-                    Alumno
-                  </span>
-                  <select
-                    value={selectedAlumnoId}
-                    onChange={(event) =>
-                      setSelectedAlumnoId(event.target.value)
-                    }
-                    className="mt-2 w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                    required
-                  >
-                    <option value="" disabled>
-                      Selecciona un alumno
-                    </option>
-                    {alumnos.map((alumno) => (
-                      <option key={alumno.id} value={alumno.id}>
-                        {alumno.full_name || alumno.nombre || alumno.email}
-                      </option>
-                    ))}
+                <div>
+                  <label className="text-xs font-semibold uppercase text-slate-400 block mb-1">2. Empresa de Destino</label>
+                  <select className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-sm" value={selectedEmpresaId} onChange={(e) => setSelectedEmpresaId(e.target.value)}>
+                    <option value="">Selecciona Empresa...</option>
+                    {empresas.map((e) => (<option key={e.id} value={e.id}>{e.nombre}</option>))}
                   </select>
-                </label>
-
-                <button
-                  type="button"
-                  onClick={handleDownloadCV}
-                  className="w-full rounded-3xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
-                >
-                  Descargar CV del alumno
-                </button>
-
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-200">
-                    Empresa
-                  </span>
-                  <select
-                    value={selectedEmpresaId}
-                    onChange={(event) =>
-                      setSelectedEmpresaId(event.target.value)
-                    }
-                    className="mt-2 w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                    required
-                  >
-                    <option value="" disabled>
-                      Selecciona una empresa
-                    </option>
-                    {empresas.map((empresa) => (
-                      <option key={empresa.id} value={empresa.id}>
-                        {empresa.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="text-sm font-medium text-slate-200">
-                    Ciclo
-                  </span>
-                  <select
-                    value={selectedCicloId}
-                    onChange={(event) => setSelectedCicloId(event.target.value)}
-                    className="mt-2 w-full rounded-3xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none focus:border-slate-600"
-                    required
-                  >
-                    <option value="" disabled>
-                      Selecciona un ciclo
-                    </option>
-                    {ciclos.map((ciclo) => (
-                      <option key={ciclo.id} value={ciclo.id}>
-                        {ciclo.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full rounded-3xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-200"
-              >
-                Asignar alumno
-              </button>
+              <div>
+                <label className="text-xs font-semibold uppercase text-slate-400 block mb-1">3. Ciclo Formativo</label>
+                <select className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2 text-sm" value={selectedCicloId} onChange={(e) => setSelectedCicloId(e.target.value)}>
+                  <option value="">Selecciona Ciclo...</option>
+                  {ciclos.map((c) => (<option key={c.id} value={c.id}>{c.nombre}</option>))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                <button type="button" onClick={handleDownloadCV} className="border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm py-2 px-4 rounded-xl transition font-medium">📥 Descargar CV PDF</button>
+                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white text-sm py-2 px-4 rounded-xl transition font-medium">Asociar a la Plaza</button>
+              </div>
             </form>
           </div>
         </section>
+
       </div>
     </div>
   );

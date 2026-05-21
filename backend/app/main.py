@@ -54,6 +54,11 @@ def crear_ciclo(ciclo: schemas.CicloCreate, db: Session = Depends(get_db)):
     db.commit()
     return {"mensaje": "Ciclo creado correctamente"}
 
+# --- 3.1 OBTENER CICLOS ---
+@app.get("/ciclos/", tags=["Admin"])
+def obtener_ciclos(db: Session = Depends(get_db)):
+    return db.query(models.Ciclo).all()
+
 # --- 4. IMPORTAR ALUMNOS ---
 @app.post("/alumnos/importar", tags=["Importación"])
 async def importar_alumnos(file: UploadFile = File(...), db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
@@ -119,9 +124,16 @@ def asignar_ciclo_a_profesor(profesor_id: int, ciclo_id: int, db: Session = Depe
 # --- 9. VER MIS ALUMNOS (Tutor) ---
 @app.get("/mis-alumnos/", tags=["Profesores"])
 def obtener_mis_alumnos(profesor_id: int, db: Session = Depends(get_db)):
-    profe = db.query(models.User).filter(models.User.id == profesor_id).first()
-    if profe.role == "admin": return db.query(models.User).filter(models.User.role == "student").all()
-    return db.query(models.User).join(models.Asignacion).filter(models.Asignacion.ciclo_id == profe.ciclo_tutor_id).all()
+    id_buscar = profesor_id if profesor_id is not None else current_user.id
+    
+    profe = db.query(models.User).filter(models.User.id == id_buscar).first()
+    if not profe:
+        raise HTTPException(status_code=404, detail="Profesor no encontrado")
+        
+    if profe.role == "admin": 
+        return db.query(models.User).filter(models.User.role == "student").all()
+        
+    return db.query(models.User).join(models.Asignacion, models.Asignacion.alumno_id == models.User.id, isouter=True).filter(profe.ciclo_tutor_id == models.User.ciclo_tutor_id).all()
 
 # --- 10. HISTORIAL SEGUIMIENTO POR EMPRESA ---
 @app.get("/empresas/{empresa_id}/seguimientos", tags=["Profesores"])
@@ -139,13 +151,36 @@ async def subir_cv(file: UploadFile = File(...), db: Session = Depends(get_db), 
     db.commit()
     return {"mensaje": "CV subido"}
 
-# --- 12. DASHBOARD ALUMNO ---
+# --- FUNCIONES AUXILIARES REFACTORIZADAS (< 20 LÍNEAS) ---
+def obtener_ciclo_por_id(db: Session, ciclo_id: int) -> str:
+    if not ciclo_id:
+        return "No asignado"
+    ciclo_db = db.query(models.Ciclo).filter(models.Ciclo.id == ciclo_id).first()
+    return ciclo_db.nombre if ciclo_db else "No asignado"
+
+def armar_dashboard(estado: str, tlf: str, ciclo: str, emp=None) -> dict:
+    return {
+        "estado": estado, "telefono": tlf, "ciclo": ciclo,
+        "empresa": emp.nombre if emp else None,
+        "direccion": emp.direccion if emp else None,
+        "tutor_laboral": emp.persona_contacto if emp else None,
+        "email_contacto": emp.email_tutor if emp else None
+    }
+
+# --- 12. DASHBOARD ALUMNO (CORREGIDO Y SEGURO) ---
 @app.get("/alumno/dashboard", response_model=schemas.DashboardOut, tags=["Alumnos"])
 def ver_dashboard_alumno(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     asig = db.query(models.Asignacion).filter(models.Asignacion.alumno_id == current_user.id).first()
-    if not asig: return {"estado": "Pendiente", "empresa": None, "direccion": None, "tutor_laboral": None, "email_contacto": None}
+    
+    # Si hay asignación, usamos el ciclo_id de la asignación; si no, el del usuario
+    id_ciclo = asig.ciclo_id if asig else current_user.ciclo_tutor_id
+    ciclo_nombre = obtener_ciclo_por_id(db, id_ciclo)
+    
+    if not asig:
+        return armar_dashboard("Pendiente", current_user.telefono, ciclo_nombre)
+        
     emp = db.query(models.Empresa).filter(models.Empresa.id == asig.empresa_id).first()
-    return {"estado": "Asignado", "empresa": emp.nombre, "direccion": emp.direccion, "tutor_laboral": emp.persona_contacto, "email_contacto": emp.email_tutor}
+    return armar_dashboard("Asignado", current_user.telefono, ciclo_nombre, emp)
 
 # --- 13. DESCARGAR CV ---
 @app.get("/descargar-cv/{alumno_id}", tags=["Profesores"])

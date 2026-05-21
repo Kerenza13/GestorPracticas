@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
-import { verDashboardAlumno } from '../../api/api'
+import { verDashboardAlumno, subirCV } from '../../api/api' // 🟢 Importamos subirCV
 
 export function AlumnoView() {
   const { user } = useAuth()
   const [alumno, setAlumno] = useState(null)
   const [loading, setLoading] = useState(true)
+  
+  // 🟢 Estados para controlar el archivo y los mensajes de feedback
+  const [cvFile, setCvFile] = useState(null)
+  const [message, setMessage] = useState('')
+  const [error, setError] = useState('')
+  const [subiendo, setSubiendo] = useState(false)
 
   useEffect(() => {
     const fetchAlumno = async () => {
@@ -21,6 +27,30 @@ export function AlumnoView() {
 
     fetchAlumno()
   }, [])
+
+  // 🟢 Función para manejar el envío del archivo PDF al backend
+  const handleUploadCV = async (event) => {
+    event.preventDefault()
+    setMessage('')
+    setError('')
+
+    if (!cvFile) {
+      setError('Por favor, selecciona un archivo PDF primero.')
+      return
+    }
+
+    try {
+      setSubiendo(true)
+      const result = await subirCV(cvFile) // Llama a tu función de api.js
+      setMessage(result.mensaje || '¡Currículum subido correctamente!')
+      setCvFile(null)
+      event.target.reset() // Limpia el input del archivo en el HTML
+    } catch (err) {
+      setError(err.message || 'Error al subir el currículum')
+    } finally {
+      setSubiendo(false)
+    }
+  }
 
   const nombre = user?.nombre || user?.email || '—'
   const email = user?.email || '—'
@@ -54,13 +84,38 @@ export function AlumnoView() {
             <p className='mt-6 text-sm text-slate-400'>Los datos del alumno se cargan desde el backend para mostrar nombre, email y ciclo de forma correcta.</p>
           </div>
 
-          <div className='rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg'>
-            <h2 className='text-2xl font-semibold text-white'>Subir currículum</h2>
-            <p className='mt-3 text-slate-400'>Adjunta tu CV en formato PDF para que la empresa y el tutor lo revisen.</p>
-            <label className='mt-6 block rounded-3xl border border-slate-700 bg-slate-950 px-4 py-5 text-slate-200'>
-              <span className='block text-sm font-medium'>Documento CV</span>
-              <input type='file' className='mt-4 w-full text-sm' />
-            </label>
+          {/* 🟢 SECCIÓN DE SUBIDA DE CV ACTUALIZADA CON SU FORMULARIO */}
+          <div className='rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg flex flex-col justify-between'>
+            <div>
+              <h2 className='text-2xl font-semibold text-white'>Subir currículum</h2>
+              <p className='mt-3 text-slate-400'>Adjunta tu CV en formato PDF para que la empresa y el tutor lo revisen.</p>
+              
+              {/* Mensajes en pantalla */}
+              {message && <p className="mt-3 text-sm text-green-400 font-medium">{message}</p>}
+              {error && <p className="mt-3 text-sm text-red-400 font-medium">{error}</p>}
+            </div>
+
+            <form onSubmit={handleUploadCV} className="mt-6 space-y-4">
+              <label className='block rounded-3xl border border-slate-700 bg-slate-950 px-4 py-5 text-slate-200 cursor-pointer'>
+                <span className='block text-sm font-medium'>Documento CV</span>
+                <input 
+                  type='file' 
+                  accept=".pdf" // Solo permite PDFs
+                  className='mt-4 w-full text-sm file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700' 
+                  onChange={(e) => setCvFile(e.target.files[0])} // Guarda el archivo seleccionado
+                />
+              </label>
+              
+              <button 
+                type="submit" 
+                disabled={subiendo}
+                className={`w-full text-white font-medium text-sm py-2 px-4 rounded-2xl transition ${
+                  subiendo ? 'bg-blue-800 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                }`}
+              >
+                {subiendo ? 'Subiendo...' : 'Subir Currículum'}
+              </button>
+            </form>
           </div>
         </section>
 

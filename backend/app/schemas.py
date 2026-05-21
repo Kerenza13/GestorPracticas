@@ -42,6 +42,8 @@ class SeguimientoCreate(BaseModel):
 # --- RESPUESTAS PARA EL FRONT (Dashboards) ---
 class DashboardOut(BaseModel):
     estado: str
+    telefono: Optional[str] = None
+    ciclo: Optional[str] = None
     empresa: Optional[str] = None
     direccion: Optional[str] = None
     tutor_laboral: Optional[str] = None
