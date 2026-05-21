@@ -1,13 +1,11 @@
-const rawApiUrl = import.meta.env.VITE_API_URL
-const BASE_URL = rawApiUrl && rawApiUrl !== 'undefined' ? rawApiUrl.replace(/\/$/, '') : 'http://localhost:8000';
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const BASE_URL = rawApiUrl && rawApiUrl !== 'undefined' ? rawApiUrl.replace(/\/$/, '') : '';
 
 const buildUrl = (path) => {
   if (typeof path !== 'string') {
     throw new Error('Invalid API path')
   }
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path
-  }
+  if (path.startsWith('http://') || path.startsWith('https://')) { return path}
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   return `${BASE_URL}${normalizedPath}`
 }
