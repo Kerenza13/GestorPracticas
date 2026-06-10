@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   importAlumnos,
   importEmpresas,
-  registerEmpresa,
   asignarAlumno,
   registrarSeguimiento,
   descargarCV,
@@ -18,16 +17,6 @@ export function ProfesorView() {
   const [empresasFile, setEmpresasFile] = useState(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-
-  // Estados del Formulario de Registro de Empresa Manual
-  const [companyNombre, setCompanyNombre] = useState("");
-  const [companyDireccion, setCompanyDireccion] = useState("");
-  const [companyWeb, setCompanyWeb] = useState("");
-  const [companyContacto, setCompanyContacto] = useState("");
-  const [companyEmail, setCompanyEmail] = useState("");
-  const [companyTelefono, setCompanyTelefono] = useState("");
-  const [companyDni, setCompanyDni] = useState("");
-  const [companyPlazas, setCompanyPlazas] = useState("1");
 
   // Estados de datos de la API
   const [alumnos, setAlumnos] = useState([]);
@@ -134,39 +123,6 @@ export function ProfesorView() {
       setEmpresas(data);
     } catch (err) {
       setError(err.message || "Error al importar empresas");
-    }
-  };
-
-  const handleRegisterEmpresa = async (event) => {
-    event.preventDefault();
-    setMessage("");
-    setError("");
-
-    try {
-      const result = await registerEmpresa({
-        nombre: companyNombre,
-        direccion: companyDireccion,
-        web: companyWeb,
-        contacto: companyContacto,
-        email: companyEmail,
-        telefono: companyTelefono,
-        dni: companyDni,
-        plazas: Number(companyPlazas),
-      });
-      setMessage(result.mensaje);
-      setCompanyNombre("");
-      setCompanyDireccion("");
-      setCompanyWeb("");
-      setCompanyContacto("");
-      setCompanyEmail("");
-      setCompanyTelefono("");
-      setCompanyDni("");
-      setCompanyPlazas("1");
-      const data = await verEstadoPlazas();
-      setPlazasStatus(data);
-      setEmpresas(data);
-    } catch (err) {
-      setError(err.message || "Error al registrar la empresa");
     }
   };
 

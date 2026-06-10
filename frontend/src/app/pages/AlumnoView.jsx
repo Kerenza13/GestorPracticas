@@ -7,7 +7,7 @@ export function AlumnoView() {
   const [alumno, setAlumno] = useState(null)
   const [loading, setLoading] = useState(true)
   
-  // 🟢 Estados para controlar el archivo y los mensajes de feedback
+  // Estados para controlar el archivo y los mensajes de feedback
   const [cvFile, setCvFile] = useState(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -84,7 +84,7 @@ export function AlumnoView() {
             <p className='mt-6 text-sm text-slate-400'>Los datos del alumno se cargan desde el backend para mostrar nombre, email y ciclo de forma correcta.</p>
           </div>
 
-          {/* 🟢 SECCIÓN DE SUBIDA DE CV ACTUALIZADA CON SU FORMULARIO */}
+          {/*  SECCIÓN DE SUBIDA DE CV ACTUALIZADA CON SU FORMULARIO */}
           <div className='rounded-[28px] border border-slate-800 bg-slate-900/95 p-8 shadow-lg flex flex-col justify-between'>
             <div>
               <h2 className='text-2xl font-semibold text-white'>Subir currículum</h2>
