@@ -10,6 +10,7 @@ const buildUrl = (path) => {
   return `${BASE_URL}${normalizedPath}`
 }
 
+
 const parseResponse = async (response) => {
   const contentType = response.headers.get('content-type')
   const data = contentType?.includes('application/json') ? await response.json() : null
