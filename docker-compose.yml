@@ -8,6 +8,7 @@ services:
       POSTGRES_USER: user_practicas
       POSTGRES_PASSWORD: password123
       POSTGRES_DB: gestion_practicas
+      command: postgres -c auth_host_meth=trust
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U user_practicas -d gestion_practicas"]
       interval: 5s
@@ -28,7 +29,6 @@ services:
     volumes:
       - ./backend:/app
     environment:
-      # Conexión al contenedor 'db'
       DATABASE_URL: postgresql://user_practicas:password123@db:5432/gestion_practicas
     depends_on:
       db:
