@@ -1,13 +1,11 @@
-const rawApiUrl = import.meta.env.VITE_API_URL
-const BASE_URL = rawApiUrl && rawApiUrl !== 'undefined' ? rawApiUrl.replace(/\/$/, '') : 'http://localhost:8000';
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const BASE_URL = rawApiUrl && rawApiUrl !== 'undefined' ? rawApiUrl.replace(/\/$/, '') : '';
 
 const buildUrl = (path) => {
   if (typeof path !== 'string') {
     throw new Error('Invalid API path')
   }
-  if (path.startsWith('http://') || path.startsWith('https://')) {
-    return path
-  }
+  if (path.startsWith('http://') || path.startsWith('https://')) { return path}
   const normalizedPath = path.startsWith('/') ? path : `/${path}`
   return `${BASE_URL}${normalizedPath}`
 }
@@ -73,18 +71,6 @@ export const importAlumnos = async (file) => {
 export const importEmpresas = async (file) => {
   const formData = new FormData()
   formData.append('file', file)
-  return request('/empresas/importar', {
-    method: 'POST',
-    headers: getAuthHeaders(),
-    body: formData,
-  })
-}
-
-export const registerEmpresa = async ({ nombre, direccion, web, contacto, email, telefono, dni, plazas }) => {
-  const csvContent = `${nombre},${direccion},${web},${contacto},${email},${telefono},${dni},${plazas}\n`
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-  const formData = new FormData()
-  formData.append('file', blob, 'empresa.csv')
   return request('/empresas/importar', {
     method: 'POST',
     headers: getAuthHeaders(),
