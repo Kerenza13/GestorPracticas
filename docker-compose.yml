@@ -1,5 +1,19 @@
-version: '3.8'
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: react_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
   db:
     image: postgres:15
     container_name: postgres_db
@@ -8,12 +22,7 @@ services:
       POSTGRES_USER: user_practicas
       POSTGRES_PASSWORD: password123
       POSTGRES_DB: gestion_practicas
-      command: postgres -c auth_host_meth=trust
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user_practicas -d gestion_practicas"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
       - "5432:5432"
     volumes:
@@ -31,8 +40,9 @@ services:
     environment:
       DATABASE_URL: postgresql://user_practicas:password123@db:5432/gestion_practicas
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+    command: sh -c "sleep 5 && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
 
+    
 volumes:
   postgres_data:
